@@ -1,0 +1,220 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>COSC346 Week 13 - Core Data</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   	<link rel="stylesheet" type="text/css" href="../phplabbook/labbookswift.css">
+	<link rel="stylesheet" type="text/css" href="../cosc346labstyle.css">
+	<script src="../jquery-1.11.1.min.js"></script>
+	<script src="../toc.min.js"></script>
+	<script src="../cosc346labscript.js"></script>
+	<style type="text/css">
+	  table { border-collapse:collapse }
+	  th, td { border: 1px solid grey; padding: 0.5ex; }
+	</style>
+</head>
+<body>
+
+	<!-- Banner -->
+	<div class="banner">
+		<a href="../../labs.php">COSC346—Object Oriented Programming and User Interfaces</a>
+	</div>
+		
+	<!-- Lab title -->		
+	<h1>Week 13—Core Data</h1>
+	
+	<!-- Table of Contents -->
+	<div id="toc"></div>
+		
+		
+	<h2>Goals</h2>
+	<div class="block">
+		<ul class="toplist">
+			<li>Experiment with Core Data</li>
+		</ul>
+	</div>
+
+
+	<h2>Exploring Core Data using the CarLot application</h2>
+
+	<p>
+	  This lab explores Core Data. Given how Apple-specific Core Data is, we have not discussed it in detail in class, and it won't be a examined.
+
+	  Nonetheless, this lab encourages you to gain some exposure to it, in the hope that it may be useful to you in future.
+	</p>
+
+	<p>
+	  In this lab you will develop a small (almost-)no-code application that demonstrates the basics of core data. The concept for the application is taken from Chapter 11 of the 4th edition of Hillegass and Preble.
+	</p>
+
+	<p>
+	  We have seen how the NSArrayController and bindings can eliminate significant amounts of glue code.
+
+	  The NSManagedObjectContext class can observe instance variables of your data objects and take care both of undo / redo functions, and loading and saving the data.
+	</p>
+
+	<h3>NSManagedObjectModel</h3>
+
+	<p>
+	  The system needs to know about the data in your objects in order to load and save them. In particular the names and types of attributes will need to be supplied.
+	</p>
+
+	<p>
+	  In terms of terminology, what we'd think of as a "class" is termed an "entity". What we might call an "instance variable" is termed a "property".
+
+	  CoreData then manages these attributes, and relationships between objects.
+	</p>
+
+	<h3>Creating your application</h3>
+
+	<p>
+	  Create a new project in Xcode as a Cocoa Application. Call the project CarLot, set the document extension to carlot, and enable both the document-based application and core data options.
+	</p>
+
+	<p>
+	  The aim of this application is to support management of cars stored across a number of used-car lots.
+	</p>
+
+	<h3>Setting attributes</h3>
+
+	<p>
+	  Open Document.xcdatamodeld and "Add Entity" and name (or rename) the entity "Car".
+
+	  Ensure that Car is selected and then add six attributes with names and values as follows:
+	</p>
+
+	<table>
+	  <tr><th>Name</th><th>Type</th></tr>
+	  <tr><td>condition</td><td>Integer 16</td></tr>
+	  <tr><td>datePurchased</td><td>Date</td></tr>
+	  <tr><td>makeModel</td><td>String</td></tr>
+	  <tr><td>onSpecial</td><td>Boolean</td></tr>
+	  <tr><td>photo</td><td>Transformable</td></tr>	  
+	  <tr><td>price</td><td>Decimal</td></tr>
+	</table>
+
+	<h3>Defining the user interface</h3>
+	
+	<p>
+	  Open Main.storyboard in the Interface Builder. Drag an array controller into your "View Controller Scene".
+
+	  Use the Bindings Inspector to bind the managedObjectContext of the array controller to the View Controller. Our intended target is the managedObjectContext of our Document. The Model Key Path needs to be set to <br/><code>self.view.window.windowController.document.managedObjectContext</code><br/> (which is somewhat epic).
+
+	  Use the Attributes Inspector to set the Mode of the Array Controller to "Entity Name" and set the name to be "Car". Enable the "Prepares Content" option.
+
+	  In the Identity Inspector, set the Label of the Array Controller to "Cars".
+	</p>
+
+	<h3>(A different way of getting to the managedObjectContext)</h3>
+	
+	<p>
+	  In earlier versions of this lab, instead of the above key path, our instructions suggested using the Model Key Path self.representedObject.managedObjectContext (as done in the previous lab) with the downside that a small amount of code is needed to set representedObject. If you want to use this approach then one line needs to be added to to Document.swift. Add a new final line to the makeWindowControllers() method that contains:<br/> <code>windowController.contentViewController?.representedObject = self</code>
+	</p>
+
+	<h3>A "View-Based" Table View</h3>
+
+	<p>
+	  Place a table view on your document window, use the left-hand-side Navigation Panel to select the actual "Table View" from within the Bordered Scroll View, and use the Attributes Inspector to change the Content Mode to "View Based" if it is not already set.
+
+	  Set the table to have three columns, entitled "Make/Model", "Price" and "Special". (You can name the columns by interacting with the column headers on the table view.)
+	</p>
+
+	<p>
+	  Use the Navigation Panel to select the Table Cell View within the first column, and delete it. Drag into its place an "Image & Text Table Cell View" from the Library.
+
+	  Check that your columns all contain a Table Cell View, that contains a Table View Cell. In addition the first column's cell view has an Image View also.
+	</p>
+
+
+	<p>
+	    Drop a number formatter into the Table View Cell for the Price column. Set the format to be 10.4+ Default, with style Currency.
+	</p>
+
+	<p>
+	  Delete the Table View Cell (not the Table Cell View) from the third column (you can use the Identity Inspector to check that it's the NSTextField you've selected), and insert a "Check Box Button" (Not a "Check Box Button Cell") in its place.
+	</p>
+
+	<p>
+	  Below the table view place a Date Picker, two Push Buttons, an Image Well and a Level Indicator, so as to match the interface depicted below. Make the Image View editable in the Attributes Inspector. Use the "Ratings" style for the level indicator to get stars, and set the maximum to be 5, and minimum 0 (warning and critical can be set to 5). Also make sure that the control is editable.
+	</p>
+
+	<img class="block" src="images/screen01.png" style="max-width:904px;max-height:801px" title="">	
+	
+	<p>
+	  Select all of the controls below the add and remove buttons, and Editor -> Embed In -> Box to wrap them into a box..
+	</p>
+
+	<img class="block" src="images/screen02.png" style="max-width:904px;max-height:635px" title="">	
+
+	<h3>Connections and Bindings</h3>
+
+	<p>
+	  Bind the table view's Content binding to (the Array Controller) Cars' arrangedObjects, but leave the Model Key Path empty.
+
+	  Bind the Selection Indexes to Cars' selectionIndexes.
+	</p>
+
+	<p>
+	  Each column's Table View Cell and Image View control needs to have bindings set as in the following table:
+	</p>
+	
+	<table>
+	  <tr><th>Binding</th><th>Bind to</th><th>Controller Key</th><th>Key Path</th></tr>
+	  <tr><td>value of Col 0 Image View</td><td>Table Cell View</td><td>Empty</td><td>objectValue.photo</td></tr>
+	  <tr><td>value of Col 0 Text Field</td><td>Table Cell View</td><td>Empty</td><td>objectValue.makeModel</td></tr>
+	  <tr><td>value of Col 1 Text Field</td><td>Table Cell View</td><td>Empty</td><td>objectValue.price</td></tr>
+	  <tr><td>value of Col 2 Check Box</td><td>Table Cell View</td><td>Empty</td><td>objectValue.onSpecial</td></tr>
+	</table>
+
+	<p>
+	  Use the Attributes Inspector to check that each Table View Cell in the table view has its behaviour set to be editable.
+	</p>
+
+
+	<p>
+	  Connect the Add and Remove button so that they trigger the "add:" and "remove:" methods of the array controller.
+	</p>
+
+	<h3>Connections and bindings for the controls in the box</h3>
+	
+	<p>
+	  Bind the controls in the box to the selection of the array controller
+	</p>
+	
+	<table>
+	  <tr><th>Binding</th><th>Bind to</th><th>Controller Key</th><th>Key Path</th></tr>
+	  <tr><td>value of date picker</td><td>Cars</td><td>selection</td><td>datePurchased</td></tr>
+	  <tr><td>enabled of Remove button</td><td>Cars</td><td>canRemove</td><td></td></tr>
+	  <tr><td>value of level indicator</td><td>Cars</td><td>selection</td><td>condition</td></tr>
+	</table>
+
+	<p>
+	  Also bind the value of the image view to Cars, with the controller key "selection" and the key path "photo". The checkbox "Conditionally Sets Editable" should be enabled.
+	</p>
+
+	<p>
+	  Now select the box, and in bindings under the "Title With Pattern" section, bind Display Pattern Title1 to Cars. The controller key needs to be "selection" and the model key path "makeModel". The Display Pattern should be set to "Details for %{title1}@". Also, the No Selection Placeholder should be "<no selection>", and the Null Placeholder should be "<no Make/Model>". 
+	</p>
+
+	<p>
+	  We will configure the first two columns to appear in bold for cars that are on special. For the first two columns' Table View Cells, bind the "Font Bold" to the Model Key Path "objectValue.onSpecial".
+	</p>
+
+	<h3>Test your application</h3>
+
+	<p>
+	  Build and run your application. If everything has been set up correctly, you should be able to edit the details of your application in place, including dragging images into the image well. Undo and redo should work, as should saving and loading documents.
+	</p>
+	
+	</div>
+
+	<div class="banner">
+		<a href="../../labs.php">COSC346—Object Oriented Programming and User Interfaces</a>
+	</div>
+	</body>
+</html>
+
+<!--  LocalWords:  Preble codekeyword mdash
+ -->
